@@ -105,7 +105,7 @@ export class Downloader {
                 }
                 return new Promise(startDownload);
             }, { concurrency: info.throttle ?? settings.imgThrottle ?? Number.POSITIVE_INFINITY});
-            await fs.writeFile(`${folder}/.complete`, "", { mode: "w+" });
+            await fs.writeFile(`${folder}/.complete`, "");
         }
         bar.stop();
     }
