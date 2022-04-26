@@ -2,3 +2,5 @@
 settings.json
 yarn-error.log
 node_modules
+build
+*.code-workspace
