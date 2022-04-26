@@ -7,6 +7,7 @@ import { MangaInfo, ChapterInfo } from "./Info.js";
 
 import pMap from "p-map";
 import * as fs from "fs/promises";
+import { existsSync } from "fs";
 import { createWriteStream, WriteStream } from "fs";
 import { fileTypeStream } from "file-type";
 import { pipeline } from "stream/promises";
@@ -26,9 +27,9 @@ export class Downloader {
     private static stringCleanup(s: string)
     {
         return s
-            .replace(/(^\s+)|(\s+$)/g, "")    // remove left & right padding
-            .replace(/\s/g, " ")        // replace all whitespaces with " "
-            .replace(/ {2, }/g, " ")         // remove repeated spaces
+            .replace(/(^\s+)|(\s+$)/g, "")  // remove left & right padding
+            .replace(/\s/g, " ")            // replace all whitespaces with " "
+            .replace(/ {2, }/g, " ")        // remove repeated spaces
     }
     private static async createFolderStructure(folder: string)
     {
@@ -54,54 +55,58 @@ export class Downloader {
             info = await info();
         }
         const title = this.stringCleanup(info.title);
-        bar.update(0, { info: title, status: "Downloading..." });
         folder = await this.createFolderStructure(
             `${folder}/${(prefix ?? "") + this.removeUnsafeCharacters(title)}`
         );
-        let total = 0;
-        await pMap(info.img, async (img, idx) => {
-            idx += 1;
-            let lastReceived = 0, thisTotal = 0;
-            let fileStream: WriteStream;
-            const padLength = Math.floor(Math.log10((info as ChapterInfo).img.length)) + 1;
-            const fileName = `${folder}/${idx.toString().padStart(padLength, "0")}.tmp`;
-            const startDownload = async (
-                resolve: (value: void) => void, 
-                reject: (error: any) => void,
-                retryStream?: Request) =>
-            {
-                const retryHandler: RetryHandler = (retryCount, error, createRetryStream) => {
-                    if (retryCount > 3) reject(error);
-                    total -= thisTotal;
-                    bar.increment(-lastReceived);
-                    startDownload(resolve, reject, createRetryStream());
-                }
-                const downloadStream = retryStream ?? got(this.stringCleanup(img), {
-                    ...(info as ChapterInfo).downloadOptions,
-                    isStream: true,
-                });
-                const newStream = await fileTypeStream(downloadStream);
-                if (fileStream) fileStream.destroy();
-                fileStream = createWriteStream(fileName);
-                pipeline(newStream, fileStream).catch(() => {});
+        if (!existsSync(`${folder}/.complete`))
+        {
+            bar.update(0, { info: title, status: "Downloading..." });
+            let total = 0;
+            await pMap(info.img, async (img, idx) => {
+                idx += 1;
+                let lastReceived = 0, thisTotal = 0;
+                let fileStream: WriteStream;
+                const padLength = Math.floor(Math.log10((info as ChapterInfo).img.length)) + 1;
+                const fileName = `${folder}/${idx.toString().padStart(padLength, "0")}.tmp`;
+                const startDownload = async (
+                    resolve: (value: void) => void, 
+                    reject: (error: any) => void,
+                    retryStream?: Request) =>
+                {
+                    const retryHandler: RetryHandler = (retryCount, error, createRetryStream) => {
+                        if (retryCount > 3) reject(error);
+                        total -= thisTotal;
+                        bar.increment(-lastReceived);
+                        startDownload(resolve, reject, createRetryStream());
+                    }
+                    const downloadStream = retryStream ?? got(this.stringCleanup(img), {
+                        ...(info as ChapterInfo).downloadOptions,
+                        isStream: true,
+                    });
+                    const newStream = await fileTypeStream(downloadStream);
+                    if (fileStream) fileStream.destroy();
+                    fileStream = createWriteStream(fileName);
+                    pipeline(newStream, fileStream).catch(() => {});
 
-                downloadStream.once("downloadProgress", (progress: Progress) => {
-                    thisTotal = progress.total ?? 0;
-                    total += thisTotal;
-                    bar.setTotal(total);
-                });
-                downloadStream.on("downloadProgress", (progress: Progress) => {
-                    bar.increment(progress.transferred - lastReceived);
-                    lastReceived = progress.transferred;
-                });
-                downloadStream.once("retry", retryHandler);
-                downloadStream.on("end", async () => {
-                    await fs.rename(fileName, fileName.replace("tmp", newStream.fileType!.ext));
-                    resolve();
-                });
-            }
-            return new Promise(startDownload);
-        }, { concurrency: info.throttle ?? settings.imgThrottle ?? Number.POSITIVE_INFINITY});
+                    downloadStream.once("downloadProgress", (progress: Progress) => {
+                        thisTotal = progress.total ?? 0;
+                        total += thisTotal;
+                        bar.setTotal(total);
+                    });
+                    downloadStream.on("downloadProgress", (progress: Progress) => {
+                        bar.increment(progress.transferred - lastReceived);
+                        lastReceived = progress.transferred;
+                    });
+                    downloadStream.once("retry", retryHandler);
+                    downloadStream.on("end", async () => {
+                        await fs.rename(fileName, fileName.replace("tmp", newStream.fileType!.ext));
+                        resolve();
+                    });
+                }
+                return new Promise(startDownload);
+            }, { concurrency: info.throttle ?? settings.imgThrottle ?? Number.POSITIVE_INFINITY});
+            await fs.writeFile(`${folder}/.complete`, "", { mode: "w+" });
+        }
         bar.stop();
     }
     private static async downloadFull(info: MangaInfo, folder: string)
