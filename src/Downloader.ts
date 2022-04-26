@@ -1,5 +1,5 @@
 import { got } from "./GotInstance.js";
-import type { Progress, Request } from "got-scraping";
+import type { OptionsInit, Progress, Request, RequestError } from "got-scraping";
 import { settings } from "./Settings.js";
 import { MultiBar } from "./MultiProgressBar.js";
 import { getInfo } from "./Extractor.js";
@@ -11,6 +11,12 @@ import { createWriteStream, WriteStream } from "fs";
 import { fileTypeStream } from "file-type";
 import { pipeline } from "stream/promises";
 
+type RetryHandler = (
+    retryCount: number,
+    error: RequestError,
+    createRetryStream: (updatedOptions?: OptionsInit) => Request
+) => void;
+
 export class Downloader {
     private static multibar: MultiBar;
     private static removeUnsafeCharacters(s: string)
@@ -21,8 +27,8 @@ export class Downloader {
     {
         return s
             .replace(/(^\s+)|(\s+$)/g, "")    // remove left & right padding
-            .replace(/[\n\t\r]/g, " ")        // replace all whitespace with " "
-            .replace(/\s{2, }/g, " ")         // remove repeated spaces
+            .replace(/\s/g, " ")        // replace all whitespaces with " "
+            .replace(/ {2, }/g, " ")         // remove repeated spaces
     }
     private static async createFolderStructure(folder: string)
     {
@@ -55,19 +61,32 @@ export class Downloader {
         let total = 0;
         await pMap(info.img, async (img, idx) => {
             idx += 1;
-            let lastReceived = 0, thisTotal;
-            let fileType: string;
+            let lastReceived = 0, thisTotal = 0;
             let fileStream: WriteStream;
             const padLength = Math.floor(Math.log10((info as ChapterInfo).img.length)) + 1;
             const fileName = `${folder}/${idx.toString().padStart(padLength, "0")}.tmp`;
-            const startDownload = async (resolve, retryStream?: Request) =>
+            const startDownload = async (
+                resolve: (value: void) => void, 
+                reject: (error: any) => void,
+                retryStream?: Request) =>
             {
+                const retryHandler: RetryHandler = (retryCount, error, createRetryStream) => {
+                    if (retryCount > 3) reject(error);
+                    total -= thisTotal;
+                    bar.increment(-lastReceived);
+                    startDownload(resolve, reject, createRetryStream());
+                }
                 const downloadStream = retryStream ?? got(this.stringCleanup(img), {
                     ...(info as ChapterInfo).downloadOptions,
                     isStream: true,
                 });
+                const newStream = await fileTypeStream(downloadStream);
+                if (fileStream) fileStream.destroy();
+                fileStream = createWriteStream(fileName);
+                pipeline(newStream, fileStream).catch(() => {});
+
                 downloadStream.once("downloadProgress", (progress: Progress) => {
-                    thisTotal = progress.total ?? 0; 
+                    thisTotal = progress.total ?? 0;
                     total += thisTotal;
                     bar.setTotal(total);
                 });
@@ -75,18 +94,13 @@ export class Downloader {
                     bar.increment(progress.transferred - lastReceived);
                     lastReceived = progress.transferred;
                 });
-                downloadStream.on("end", resolve);
-                const newStream = await fileTypeStream(downloadStream);
-                fileType = newStream.fileType!.ext;
-                if (fileStream) fileStream.destroy();
-                fileStream = createWriteStream(fileName);
-                downloadStream.once("retry", (_1, _2, createRetryStream) => {
-                    startDownload(resolve, createRetryStream());
-                })
-                pipeline(newStream, fileStream).catch(() => {});
+                downloadStream.once("retry", retryHandler);
+                downloadStream.on("end", async () => {
+                    await fs.rename(fileName, fileName.replace("tmp", newStream.fileType!.ext));
+                    resolve();
+                });
             }
-            const downloadPromise = new Promise((resolve) => { startDownload(resolve) })
-            fs.rename(fileName, fileName.replace("tmp", fileType!));
+            return new Promise(startDownload);
         }, { concurrency: info.throttle ?? settings.imgThrottle ?? Number.POSITIVE_INFINITY});
         bar.stop();
     }

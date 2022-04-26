@@ -5,14 +5,19 @@ const context: Context = {
         browsers: [
             {
                 name: "chrome",
-                minVersion: 90
+                minVersion: 95
             },
             {
                 name: "firefox",
                 minVersion: 90
+            },
+            {
+                name: "edge",
+                minVersion: 95
             }
         ],
-        devices: ["desktop"]
+        devices: ["desktop"],
+        operatingSystems: ["windows"]
     },
     sessionToken: new Number(Date.now())
 }
