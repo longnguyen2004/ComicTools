@@ -7,4 +7,9 @@ await loadExtractors();
 
 console.log(settings);
 
-await Downloader.download("https://zinmanga.com/manga/ive-been-here-from-the-beginning/", "C:\\Longu")
+prompt.start();
+
+console.log("Please input the link and output folder:");
+const {link, output} = <{link: string, output: string}>await prompt.get(["link", "output"]);
+
+await Downloader.download(link, output);
