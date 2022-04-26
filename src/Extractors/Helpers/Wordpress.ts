@@ -32,8 +32,7 @@ export abstract class WordpressTemplate extends Extractor
     abstract getChapter(link: string): Promise<ChapterInfo>;
 
     getInfo(link: string): Promise<Info> {
-        const pathname = new URL(link).pathname;
-        const isMangaLink = pathname.match(/\/[^\/]/g)?.length === 2;
+        const isMangaLink = Extractor.countSubdirectories(link) === 2;
         return isMangaLink ? this.getManga(link) : this.getChapter(link);
     }
 }

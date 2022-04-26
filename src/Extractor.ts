@@ -13,6 +13,11 @@ class Extractor
     got: Got;
     static siteName: string;
     static pattern?: RegExp;
+    static countSubdirectories(link: string)
+    {
+        const { pathname } = new URL(link);
+        return pathname.match(/\/[^\/]/g)?.length;
+    }
     constructor(got: Got)
     {
         this.got = got;
