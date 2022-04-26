@@ -20,7 +20,7 @@ export default class batotoo extends Extractor
         `)(AES, enc);
         return {
             type: "chapter",
-            title: title.trim().replace("\n           ",""),
+            title: title,
             img: img
         }
     }
