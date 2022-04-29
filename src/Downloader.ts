@@ -1,5 +1,5 @@
 import { got } from "./GotInstance.js";
-import type { OptionsInit, Progress, Request, RequestError } from "got-scraping";
+import { OptionsInit, Progress, Request, RequestError } from "got-scraping";
 import { settings } from "./Settings.js";
 import { MultiBar } from "./MultiProgressBar.js";
 import { getInfo } from "./Extractor.js";
@@ -71,10 +71,10 @@ export class Downloader {
                 const startDownload = async (
                     resolve: (value: void) => void, 
                     reject: (error: any) => void,
-                    retryStream?: Request) =>
-                {
+                    retryStream?: Request
+                ) => {
                     const retryHandler: RetryHandler = (retryCount, error, createRetryStream) => {
-                        if (retryCount > 3) reject(error);
+                        if (retryCount > 3) return reject(error);
                         total -= thisTotal;
                         bar.increment(-lastReceived);
                         startDownload(resolve, reject, createRetryStream());
@@ -83,11 +83,6 @@ export class Downloader {
                         ...(info as ChapterInfo).downloadOptions,
                         isStream: true,
                     });
-                    const newStream = await fileTypeStream(downloadStream);
-                    if (fileStream) fileStream.destroy();
-                    fileStream = createWriteStream(fileName);
-                    pipeline(newStream, fileStream).catch(() => {});
-
                     downloadStream.once("downloadProgress", (progress: Progress) => {
                         thisTotal = progress.total ?? 0;
                         total += thisTotal;
@@ -98,10 +93,22 @@ export class Downloader {
                         lastReceived = progress.transferred;
                     });
                     downloadStream.once("retry", retryHandler);
-                    downloadStream.on("end", async () => {
+                    const newStream = await fileTypeStream(downloadStream);
+
+                    if (fileStream) fileStream.destroy();
+                    fileStream = createWriteStream(fileName);
+
+                    try
+                    {
+                        await pipeline(newStream, fileStream).finally(() => fileStream.destroy());
                         await fs.rename(fileName, fileName.replace("tmp", newStream.fileType!.ext));
                         resolve();
-                    });
+                    }
+                    catch (e: any)
+                    {
+                        if (e instanceof RequestError) return;
+                        else return reject(e);
+                    }
                 }
                 return new Promise(startDownload);
             }, { concurrency: info.throttle ?? settings.imgThrottle ?? Number.POSITIVE_INFINITY});
