@@ -102,6 +102,7 @@
   },
   "include": ["src/Extractors/**/*"],
   "files": [
+    "src/Utils/Range.ts",
     "src/Info.ts",
     "src/Settings.ts",
     "src/Logger.ts",
