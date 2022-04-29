@@ -36,10 +36,10 @@ try {
 }
 catch (e: any) {
     if (e instanceof SyntaxError) {
-        logger.log("Invalid JSON, overwriting with default values", Logger.Severity.WARNING);
+        logger.warn("Invalid JSON, overwriting with default values");
     }
     else {
-        logger.log("Error opening settings file, your settings will not be saved", Logger.Severity.ERROR);
+        logger.error("Error opening settings file, your settings will not be saved");
     }
 }
 await writeSettings();

@@ -1,4 +1,5 @@
-const writer = [console.log, console.warn, console.error];
+import chalk from "chalk";
+import util from "util"
 
 class Logger {
     private readonly source: string;
@@ -6,20 +7,20 @@ class Logger {
     {
         this.source = source;
     }
-    log(message: string, severity: Logger.Severity = Logger.Severity.INFO): void
+    log(...object: any[]): void
     {
-        const output = `[${this.source}] ${message}`;
-        writer[severity].call(console, output);
+        const output = util.format(`[${this.source}]`, ...object);
+        console.log(output);
     }
-}
-
-namespace Logger
-{
-    export enum Severity
+    warn(...object: any[]): void
     {
-        INFO,
-        WARNING,
-        ERROR
+        const output = util.format(`[${this.source}]`, ...object);
+        console.warn(chalk.yellowBright(output));
+    }
+    error(...object: any[]): void
+    {
+        const output = util.format(`[${this.source}]`, ...object);
+        console.error(chalk.redBright(output));
     }
 }
 
