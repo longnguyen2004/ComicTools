@@ -11,6 +11,7 @@ const logger = new Logger("Extractor");
 class Extractor
 {
     got: Got;
+    logger: Logger;
     static siteName: string;
     static pattern?: RegExp;
     static countSubdirectories(link: string)
@@ -21,6 +22,7 @@ class Extractor
     constructor(got: Got)
     {
         this.got = got;
+        this.logger = new Logger(this.constructor.name);
     }
     async loadSite(link: string): Promise<[string, cheerio.Root]>
     {
