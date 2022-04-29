@@ -24,7 +24,8 @@ const context: Context = {
 
 const got = gotScraping.extend({
     timeout: {
-        request: 30000
+        request: 30000,
+        read: 30000
     },
     context: context
 });
