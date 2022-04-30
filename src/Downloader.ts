@@ -31,7 +31,7 @@ export class Downloader {
         return s
             .replace(/(^\s+)|(\s+$)/g, "")  // remove left & right padding
             .replace(/\s/g, " ")            // replace all whitespaces with " "
-            .replace(/ {2, }/g, " ")        // remove repeated spaces
+            .replace(/ {2,}/g, " ")        // remove repeated spaces
     }
     private static async createFolderStructure(folder: string)
     {
