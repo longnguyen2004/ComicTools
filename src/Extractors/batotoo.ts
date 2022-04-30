@@ -13,7 +13,7 @@ export default class batotoo extends Extractor
         const [_, $] = await this.loadSite(link);
         const script = $("body > script:nth-child(14)").html()!.split("\n");
         const episodeID = Function(script[4] + "return episodeIid;")();
-        const title = ($(`option[value=${episodeID}]`)[0] as cheerio.TagElement).children[0].data!;
+        const title = $(`option[value=${episodeID}]`).first().text();
         const img = Function("AES", "enc", script[2] + script[5] + script[6] + `
             const host = JSON.parse(AES.decrypt(server, batojs).toString(enc.Utf8));
             return images.map(elem => host + elem);
