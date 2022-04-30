@@ -4,6 +4,7 @@ import { settings } from "./Settings.js";
 import { MultiBar } from "./MultiProgressBar.js";
 import { getInfo } from "./Extractor.js";
 import { MangaInfo, ChapterInfo } from "./Info.js";
+import { Logger } from "./Logger.js";
 
 import pMap from "p-map";
 import * as fs from "fs/promises";
@@ -19,6 +20,7 @@ type RetryHandler = (
 ) => void;
 
 export class Downloader {
+    static logger = new Logger("Downloader");
     private static multibar: MultiBar;
     private static removeUnsafeCharacters(s: string)
     {
@@ -123,6 +125,7 @@ export class Downloader {
         folder = await this.createFolderStructure(
             `${folder}/${this.removeUnsafeCharacters(title)}`
         );
+        this.logger.log("Chapter count:", info.chapter.length);
         const bar = this.multibar.create(info.chapter.length, 0, { info: title, valueType: "count" });
         await pMap(info.chapter, async (elem, index) => {
             await this.downloadChapter(elem, folder, `${index + 1}. `);
