@@ -12,7 +12,7 @@ class Extractor
 {
     got: Got;
     logger: Logger;
-    static siteName: string;
+    static siteName: string | string[];
     static pattern?: RegExp;
     static countSubdirectories(link: string)
     {
@@ -53,14 +53,24 @@ async function loadExtractors()
                 .then(module => module.default as ExtractorConstructor)
         ));
     }
-    logger.log(`Loaded ${extractors.length} extractors: ${extractors.map(elem => elem.siteName).join(", ")}`);
+
+    logger.log(`Loaded ${extractors.length} extractors: ${extractors.map(elem => elem.siteName).flat().sort().join(", ")}`);
 }
 
 function getInfo(link: string)
 {
     for (const extractor of extractors!)
     {
-        const pattern = extractor.pattern ?? new RegExp(extractor.siteName);
+        let regexFromSiteName;
+        if (extractor.siteName instanceof Array)
+        {
+            regexFromSiteName = extractor.siteName.join("|");
+        }
+        else
+        {
+            regexFromSiteName = extractor.siteName;
+        }
+        const pattern = extractor.pattern ?? new RegExp(regexFromSiteName);
         if (pattern.test(link))
         {
             const instance = new (extractor)(got);
