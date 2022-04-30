@@ -5,7 +5,7 @@ import { range } from "../Utils/Range.js";
 export default class webtoons extends Extractor
 {
     static siteName = "webtoons";
-    static pattern = /webtoons\.com\/\w{2}\/[a-z-]+\/[a-z-]+\/(list|\w+-\d+\/viewer)\?title_no=\d+(&episode_no=\d+)?/;
+    static pattern = /webtoons\.com\/\w{2}\/[a-z-]+\/[a-z-]+\/(list|[a-z0-9-]+\/viewer)\?title_no=\d+(&episode_no=\d+)?/;
     async _getChapterLinks(link: string)
     {
         const _paginate = async(link: string) =>
