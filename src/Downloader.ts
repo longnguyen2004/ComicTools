@@ -75,7 +75,6 @@ export class Downloader {
                 ) => {
                     const retryHandler: RetryHandler = (retryCount, error, createRetryStream) => {
                         if (retryCount > 3) return reject(error);
-                        total -= thisTotal;
                         bar.increment(-lastReceived);
                         startDownload(resolve, reject, createRetryStream());
                     }
@@ -83,11 +82,13 @@ export class Downloader {
                         ...(info as ChapterInfo).downloadOptions,
                         isStream: true,
                     });
-                    downloadStream.once("downloadProgress", (progress: Progress) => {
-                        thisTotal = progress.total ?? 0;
-                        total += thisTotal;
-                        bar.setTotal(total);
-                    });
+                    if (!retryStream)
+                    {
+                        downloadStream.once("downloadProgress", (progress: Progress) => {
+                            total += progress.total ?? 0;
+                            bar.setTotal(total);
+                        });
+                    }
                     downloadStream.on("downloadProgress", (progress: Progress) => {
                         bar.increment(progress.transferred - lastReceived);
                         lastReceived = progress.transferred;
