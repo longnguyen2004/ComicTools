@@ -27,6 +27,9 @@ const got = gotScraping.extend({
         request: 30000,
         read: 30000
     },
+    retry: {
+        limit: 3
+    },
     context: context
 });
 
