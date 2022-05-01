@@ -5,6 +5,7 @@ import { MultiBar } from "./MultiProgressBar.js";
 import { getInfo } from "./Extractor.js";
 import { MangaInfo, ChapterInfo } from "./Info.js";
 import { Logger } from "./Logger.js";
+import { BufferedPassThrough } from "./Utils/BufferedPassThrough.js";
 
 import pMap from "p-map";
 import * as fs from "fs/promises";
@@ -96,7 +97,9 @@ export class Downloader {
                         lastReceived = progress.transferred;
                     });
                     downloadStream.once("retry", retryHandler);
-                    const newStream = await fileTypeStream(downloadStream);
+                    const bufferedStream = new BufferedPassThrough(100);
+                    pipeline(downloadStream, bufferedStream);
+                    const newStream = await fileTypeStream(bufferedStream);
 
                     if (fileStream) fileStream.destroy();
                     fileStream = createWriteStream(fileName);
