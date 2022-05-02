@@ -20,7 +20,7 @@ export class BufferedPassThrough extends Transform
         }
         callback();
     }
-    override _final(callback: TransformCallback): void {
+    override _flush(callback: TransformCallback): void {
         if (this._buffer.length > 0)
         {
             this.push(this._buffer);
