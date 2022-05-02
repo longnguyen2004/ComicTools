@@ -67,8 +67,9 @@ export class Downloader {
             let total = 0;
             await pMap(info.img, async (img, idx) => {
                 idx += 1;
-                let lastReceived = 0, thisTotal = 0;
+                let lastReceived = 0;
                 let fileStream: WriteStream;
+                let writePipeline: Promise<void>;
                 const padLength = Math.floor(Math.log10((info as ChapterInfo).img.length)) + 1;
                 const fileName = `${folder}/${idx.toString().padStart(padLength, "0")}.tmp`;
                 const startDownload = async (
@@ -97,24 +98,27 @@ export class Downloader {
                         lastReceived = progress.transferred;
                     });
                     downloadStream.once("retry", retryHandler);
+                    downloadStream.once("error", reject);
                     const bufferedStream = new BufferedPassThrough(100);
                     pipeline(downloadStream, bufferedStream);
                     const newStream = await fileTypeStream(bufferedStream);
 
                     if (fileStream) fileStream.destroy();
                     fileStream = createWriteStream(fileName);
+                    writePipeline = pipeline(newStream, fileStream).finally(() => fileStream.destroy());
 
-                    try
-                    {
-                        await pipeline(newStream, fileStream).finally(() => fileStream.destroy());
-                        await fs.rename(fileName, fileName.replace("tmp", newStream.fileType!.ext));
-                        resolve();
-                    }
-                    catch (e: any)
-                    {
-                        if (e instanceof RequestError) return;
-                        else return reject(e);
-                    }
+                    downloadStream.once("end", async() => {
+                        try
+                        {
+                            await writePipeline;
+                            await fs.rename(fileName, fileName.replace("tmp", newStream.fileType!.ext));
+                            resolve();
+                        }
+                        catch (e: any)
+                        {
+                            reject(e);
+                        }
+                    });
                 }
                 return new Promise(startDownload);
             }, { concurrency: info.throttle ?? settings.imgThrottle ?? Number.POSITIVE_INFINITY});
