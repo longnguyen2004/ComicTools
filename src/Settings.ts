@@ -31,7 +31,6 @@ try {
             ..._settings,
             ...settingsFromFile
         }
-        await writeSettings();
     }
 }
 catch (e: any) {
