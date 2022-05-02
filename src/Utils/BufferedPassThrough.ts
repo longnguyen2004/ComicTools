@@ -6,7 +6,9 @@ export class BufferedPassThrough extends Transform
     private _buffer: Buffer;
     constructor(minChunkSize: number)
     {
-        super();
+        super({
+            highWaterMark: 0
+        });
         this._minChunkSize = minChunkSize;
         this._buffer = Buffer.alloc(0);
     }
@@ -26,13 +28,5 @@ export class BufferedPassThrough extends Transform
             this.push(this._buffer);
         }
         callback();
-    }
-    override _destroy(error: Error | null, callback: (error: Error | null) => void): void
-    {
-        if (this._buffer.length > 0)
-        {
-            this.push(this._buffer);
-        }
-        callback(error);
     }
 }
