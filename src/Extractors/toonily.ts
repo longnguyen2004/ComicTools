@@ -1,6 +1,5 @@
 import { Info, MangaInfo, ChapterInfo } from "../Info.js";
 import { Extractor } from "../Extractor.js";
-import cheerio from "cheerio";
 
 export default class toonily extends Extractor
 {
