@@ -1,6 +1,5 @@
 import { Info, MangaInfo, ChapterInfo } from "../Info.js";
 import { Extractor } from "../Extractor.js";
-import { range } from "../Utils/Range.js";
 
 export default class webtoons extends Extractor
 {
