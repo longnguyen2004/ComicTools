@@ -1,6 +1,12 @@
 import cliProgress, { Options, Params, ValueType } from "cli-progress"
 const { Format } = cliProgress;
 
+type Payload = {
+    info?: string,
+    status?: string,
+    valueType: "count" | "size",
+    failed?: number,
+}
 class CustomMultiBar extends cliProgress.MultiBar
 {
     static sizeFormatter(value: number)
@@ -10,9 +16,7 @@ class CustomMultiBar extends cliProgress.MultiBar
         const suffix = ["", "Ki", "Mi", "Gi", "Ti"];
         return `${value.toFixed(2)}${suffix[exponent]}B`;
     }
-    static formatter(
-        options: Options, params: Params,
-        payload: { info?: string; status?: string, valueType: "count" | "size" }): string
+    static formatter(options: Options, params: Params, payload: Payload): string
     {
         const { value, total, progress, eta } = params;
         const bar = Format.BarFormat(params.progress, options);
@@ -28,6 +32,7 @@ class CustomMultiBar extends cliProgress.MultiBar
         output += ` | ETA: ${params.total !== 0 ? Format.TimeFormat(eta, options, 5) : "--"}`;
         output += payload.info ? ` | ${payload.info}` : "";
         output += payload.status ? ` | ${payload.status}` : "";
+        output += payload.failed ? ` (Failed: ${payload.failed})` : "";
         return output;
     }
     constructor()
