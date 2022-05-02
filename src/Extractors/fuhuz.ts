@@ -32,7 +32,7 @@ export default class fuhuz extends Extractor
         return {
             type: "full",
             title: title,
-            chapter: chapter.map(link => () => this.getChapter(link))
+            chapter: chapter.map(link => () => this.getChapter(link)).reverse()
         }
     }
     getInfo(link: string): Promise<Info>
