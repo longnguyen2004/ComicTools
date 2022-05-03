@@ -1,4 +1,4 @@
-import cliProgress, { Options, Params, ValueType } from "cli-progress"
+import cliProgress, { Options, Params } from "cli-progress"
 const { Format } = cliProgress;
 
 type Payload = {
@@ -9,6 +9,18 @@ type Payload = {
 }
 class CustomMultiBar extends cliProgress.MultiBar
 {
+    static barFormatter(progress: number, options: Options)
+    {
+        const blockChars = [" ", "\u258F", "\u258E", "\u258D", "\u258C", "\u258B", "\u258A", "\u2589", "\u2588"];
+        const barsize = options.barsize!;
+        const progressScaled = progress * barsize;
+        const complete = Math.floor(progressScaled);
+        const incomplete = Math.floor(barsize - progressScaled);
+        const partial = Math.floor((progressScaled - complete) * 8);
+        return blockChars[8].repeat(complete) +
+               (complete + incomplete === barsize ? "" : blockChars[partial]) +
+               blockChars[0].repeat(incomplete);
+    }
     static sizeFormatter(value: number)
     {
         const exponent = Math.floor(Math.log2(value) / 10);
@@ -19,7 +31,7 @@ class CustomMultiBar extends cliProgress.MultiBar
     static formatter(options: Options, params: Params, payload: Payload): string
     {
         const { value, total, progress, eta } = params;
-        const bar = Format.BarFormat(params.progress, options);
+        const bar = CustomMultiBar.barFormatter(params.progress, options);
         const percentage = (progress * 100).toFixed(2).padStart(6) + "%";
         const progressString = [value, total].map(
             (val) => {
@@ -28,7 +40,7 @@ class CustomMultiBar extends cliProgress.MultiBar
             }
         ).join("/");
         let output = "";
-        output += `[${bar}] ${percentage} (${progressString})`;
+        output += `|${bar}| ${percentage} (${progressString})`;
         output += ` | ETA: ${params.total !== 0 ? Format.TimeFormat(eta, options, 5) : "--"}`;
         output += payload.info ? ` | ${payload.info}` : "";
         output += payload.status ? ` | ${payload.status}` : "";
