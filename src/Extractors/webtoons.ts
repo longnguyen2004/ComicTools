@@ -7,38 +7,21 @@ export default class webtoons extends Extractor
     static pattern = /webtoons\.com\/\w{2}\/[a-z-]+\/[a-z-]+\/(list|[a-z0-9-]+\/viewer)\?title_no=\d+(&episode_no=\d+)?/;
     async _getChapterLinks(link: string)
     {
-        const _paginate = async(link: string) =>
-        {
-            this.logger.log("Paginating...");
-            // Starts at page 1
-            const url = new URL(link);
-            url.searchParams.set("page", "1");
-            link = url.toString();
-            let pages: string[] = [link];
-            let $: cheerio.Root;
-            do
-            {
-                this.logger.log("Current page:", link.match(/&page=(\d+)/)![1])
-                $ = (await this.loadSite(link))[1];
-                $(".pg_prev").remove();
-                const morePages: string[] = $(".paginate > a").slice(1)
-                    .map((_, elem) => "https://webtoons.com" + $(elem).attr("href")).get();
-                pages = [...pages, ...morePages];
-                link = morePages.pop()!;
-            }
-            while ($(".pg_next").length)
-            this.logger.log("Page count:", pages.length);
-            return pages;
-        }
-        const pages = await _paginate(link);
         let chapterLinks: string[] = [];
-        for (const [idx, page] of pages.entries())
+        this.logger.log("Paginating...");
+        // Starts at page 1
+        const url = new URL(link);
+        url.searchParams.set("page", "1");
+        link = url.toString();
+        do
         {
-            const [_, $] = await this.loadSite(page);
-            const moreLinks: string[] = $("#_listUl > li > a")
-                .map((_, elem) => $(elem).attr("href")).get();
-            chapterLinks = [...chapterLinks, ...moreLinks];
+            this.logger.log("Current page:", link.match(/&page=(\d+)/)![1])
+            const [_, $] = await this.loadSite(link);
+            chapterLinks = [...chapterLinks, ...$("#_listUl > li > a").map((_, elem) => $(elem).attr("href")!).get()];
+            const dir = $(".paginate > a[href='#']").next().attr("href");
+            link = dir ? "https://webtoons.com" + dir : "";
         }
+        while (link);
         return chapterLinks.reverse();
     }
     async getChapter(link: string): Promise<ChapterInfo>
