@@ -54,7 +54,8 @@ async function loadExtractors()
         ));
     }
 
-    logger.log(`Loaded ${extractors.length} extractors: ${extractors.map(elem => elem.siteName).flat().sort().join(", ")}`);
+    logger.log(`Loaded ${extractors.length} extractors`);
+    logger.log(`Supported site: ${extractors.map(elem => elem.siteName).flat().sort().join(", ")}`);
 }
 
 function getInfo(link: string)
