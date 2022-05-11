@@ -1,10 +1,21 @@
 import { Info, MangaInfo, ChapterInfo } from "../Info.js";
 import { Extractor } from "../Extractor.js";
 
+type APIData = {
+    data: {
+        e: string[6][];
+        m: string[2];
+    },
+    error: number,
+    fc: boolean,
+    old: boolean,
+    template: string
+};
+
 export default class fuhuz extends Extractor
 {
     static siteName = "fuhuz";
-    static pattern = /fuhuz\.com\/comic(-chapter)?\/.+/;
+    static pattern = /fuhuz\.com\/comic(?:-chapter)?\/.+?_(?<id>[A-Za-z0-9]+)\.html/;
     async getChapter(link: string): Promise<ChapterInfo>
     {
         const [_, $] = await this.loadSite(link);
@@ -28,7 +39,21 @@ export default class fuhuz extends Extractor
     {
         const [_, $] = await this.loadSite(link);
         const title = $(".item-detail__title").text();
-        const chapter = $(".cscroller > .subitem-item > div > div > a").map((_, elem) => $(elem).attr("href")).get();
+        const apiData: APIData = JSON.parse(
+            await this.got("https://api.fuhuz.com/content/subitems", {
+                searchParams: new URLSearchParams([
+                    ["type", "all_json"],
+                    ["host", "fuhuz.com"],
+                    ["mid" , link.match(fuhuz.pattern)!.groups!.id]
+                ]),
+                hooks: {
+                    beforeRequest: [
+                        (options) => this.logger.log("Calling API:", options.url?.toString())
+                    ]
+                }
+            }).text()
+        );
+        const chapter = apiData.data.e.map(elem => "https://fuhuz.com" + elem[3]);
         return {
             type: "full",
             title: title,
