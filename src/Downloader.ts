@@ -25,14 +25,16 @@ export class Downloader {
     private static multibar: MultiBar;
     private static removeUnsafeCharacters(s: string)
     {
-        return s.replace(/[<>:"/\\\|\?\*]/g, "_");
+        return s.replace(/[<>:"/\\|?*]/g, "_");
     }
     private static stringCleanup(s: string)
     {
         return s
-            .replace(/(^\s+)|(\s+$)/g, "")  // remove left & right padding
-            .replace(/\s/g, " ")            // replace all whitespaces with " "
-            .replace(/ {2,}/g, " ")        // remove repeated spaces
+            .replace(/ +([.,?!:;]) */g, "$1 ")      // proper spaces for punctuations
+            .replace(/ *" *(.+?) *" */g, ' "$1" ')  // quotation marks
+            .replace(/^\s+|\s+$/g, "")              // remove left & right padding
+            .replace(/\s/g, " ")                    // replace all whitespaces with " "
+            .replace(/ {2,}/g, " ")                 // remove repeated spaces
     }
     private static async createFolderStructure(folder: string)
     {
@@ -78,8 +80,7 @@ export class Downloader {
                     retryStream?: Request
                 ) => {
                     const retryHandler: RetryHandler = (retryCount, error, createRetryStream) => {
-                        if (retryCount > 3) return reject(error);
-                        bar.increment(-lastReceived);
+                        bar.increment(-(error.request?.downloadProgress.transferred ?? 0));
                         startDownload(resolve, reject, createRetryStream());
                     }
                     const downloadStream = retryStream ?? got(this.stringCleanup(img), {
@@ -132,6 +133,7 @@ export class Downloader {
         folder = await this.createFolderStructure(
             `${folder}/${this.removeUnsafeCharacters(title)}`
         );
+        this.logger.log("Title:", title);
         this.logger.log("Chapter count:", info.chapter.length);
         const bar = this.multibar.create(info.chapter.length, 0, { info: title, valueType: "count" });
         await pMap(info.chapter, async (elem, index) => {
