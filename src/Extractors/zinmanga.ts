@@ -4,7 +4,7 @@ import { WordpressTemplate } from "./Helpers/Wordpress.js";
 export default class zinmanga extends WordpressTemplate
 {
     static siteName = ["topmanhua", "zinmanga"];
-    static pattern = /(topmanhua|zinmanga)\.com\/(manga|manhua)\/.+(\/.+)?/;
+    static pattern = /(topmanhua|zinmanga)\.com\/(manga|manhua)\/[a-z0-9-]+(\/[a-z0-9-]+)?/;
     static _prefixUrl = "https://zinmanga.com";
 
     async getChapter(link: string): Promise<ChapterInfo>

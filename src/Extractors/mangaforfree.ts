@@ -4,7 +4,7 @@ import { WordpressTemplate } from "./Helpers/Wordpress.js";
 export default class mangaforfree extends WordpressTemplate
 {
     static siteName = "mangaforfree";
-    static pattern = /mangaforfree\.net\/manga\/.+(\/.+)?/;
+    static pattern = /mangaforfree\.net\/manga\/[a-z0-9-]+(\/[a-z0-9-]+)?/;
     static _prefixUrl = "https://mangaforfree.net";
 
     async getChapter(link: string): Promise<ChapterInfo>
