@@ -102,24 +102,21 @@ export class Downloader {
                     });
                     downloadStream.once("retry", retryHandler);
                     downloadStream.once("error", reject);
-                    downloadStream.once("response", () => {
+                    downloadStream.once("response", async () => {
                         downloadStream.off("error", reject);
                         const writePipeline = pipeline(downloadStream, createWriteStream(fileName));
-                        downloadStream.once("end", async () => {
-                            try
-                            {
-                                await writePipeline;
-                                const { ext } = (await fileTypeFromFile(fileName))!;
-                                await fs.rename(fileName, fileName.replace("tmp", ext));
-                                resolve();
-                            }
-                            catch (e)
-                            {
-                                if ((e as any).code === "ERR_STREAM_PREMATURE_CLOSE")
-                                    return;
+                        try
+                        {
+                            await writePipeline;
+                            const { ext } = (await fileTypeFromFile(fileName))!;
+                            await fs.rename(fileName, fileName.replace("tmp", ext));
+                            resolve();
+                        }
+                        catch (e)
+                        {
+                            if ((e as any).code !== "ERR_STREAM_PREMATURE_CLOSE")
                                 reject(e);
-                            }
-                        });
+                        }
                     });
                 }
                 return new Promise(startDownload);
