@@ -103,7 +103,6 @@
   "include": ["src/Extractors/**/*"],
   "files": [
     "src/Utils/Range.ts",
-    "src/Utils/BufferedPassThrough.ts",
     "src/Info.ts",
     "src/Settings.ts",
     "src/Logger.ts",
