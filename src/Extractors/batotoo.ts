@@ -1,27 +1,27 @@
 import { Info, MangaInfo, ChapterInfo } from "../Info.js";
 import { Extractor } from "../Extractor.js";
 
+import { zipWith } from "lodash-es"
 import CryptoJS from "crypto-js";
 const { AES, enc } = CryptoJS;
 
 export default class batotoo extends Extractor
 {
     static siteName = "batotoo";
-    static pattern = /(((batotoo|battwo)\.com)|(bato\.to))\/(series|chapter)\/\d+/
+    static pattern = /((batotoo|battwo)\.com|bato\.to|comiko\.net)\/(series|chapter)\/\d+/
     async getChapter(link: string): Promise<ChapterInfo>
     {
-        const [_, $] = await this.loadSite(link);
-        const script = $("body > script:nth-child(14)").html()!.split("\n");
-        const episodeID = Function(script[4] + "return episodeIid;")();
+        const [html, $] = await this.loadSite(link);
+        const episodeID = html.match(/const episodeIid = (\d+);/)![1];
         const title = $(`option[value=${episodeID}]`).first().text();
-        const img = Function("AES", "enc", script[2] + script[5] + script[6] + `
-            const host = JSON.parse(AES.decrypt(server, batojs).toString(enc.Utf8));
-            return images.map(elem => host + elem);
-        `)(AES, enc);
+        const img: string[] = JSON.parse(html.match(/const imgHttpLis = (\[.+\]);/)![1]);
+        const batoWord = html.match(/const batoWord = "(.+)";/)![1];
+        const batoPass = eval(html.match(/const batoPass = (.+);/)![1]);
+        const token: string[] = JSON.parse(AES.decrypt(batoWord, batoPass).toString(enc.Utf8));
         return {
             type: "chapter",
             title: title,
-            img: img
+            img: zipWith(img, token, (_1, _2) => _1 + "?" + _2)
         }
     }
     async getManga(link: string): Promise<MangaInfo>
