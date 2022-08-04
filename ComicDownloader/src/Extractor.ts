@@ -1,9 +1,8 @@
 import type { Got } from "got-scraping";
-import * as fs from "fs";
-
 import { Info } from "./Info.js";
 import { Logger } from "./Logger.js";
 import { got } from "./GotInstance.js";
+import { globbySync } from "globby";
 import cheerio from "cheerio";
 
 const logger = new Logger("Extractor");
@@ -46,14 +45,16 @@ async function loadExtractors()
     if (!extractors)
     {
         logger.log(`Loading extractors...`);
-        const files = fs.readdirSync(extractorsURL)
+        const files = globbySync([
+            "./*.js",
+            "./*/index.js"
+        ], { cwd: extractorsURL })
             .filter(file => /\.js$/.test(file));
         extractors = await Promise.all(files.map(
             file => import(new URL(file, extractorsURL).toString())
                 .then(module => module.default as ExtractorConstructor)
         ));
     }
-
     logger.log(`Loaded ${extractors.length} extractors`);
     logger.log(`Supported site: ${extractors.map(elem => elem.siteName).flat().sort().join(", ")}`);
 }
