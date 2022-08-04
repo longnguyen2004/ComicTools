@@ -7,6 +7,7 @@ const logger = new Logger("Settings");
 interface Settings {
     chapterThrottle?: number;
     imgThrottle?: number;
+    [k: string]: unknown;
 }
 
 let _fileHandle: fs.FileHandle;
@@ -45,8 +46,6 @@ await writeSettings();
 const proxyHandler: ProxyHandler<Record<string, unknown>> = {
     get: function (target, property)
     {
-        if (!target.hasOwnProperty(property))
-            Reflect.set(target, property, {});
         return new Proxy(Reflect.get(target, property), proxyHandler)
     },
     set: function (target, property, value) {
@@ -56,7 +55,7 @@ const proxyHandler: ProxyHandler<Record<string, unknown>> = {
     }
 }
 
-const settings = new Proxy(_settings, proxyHandler);
+const settings: Settings = new Proxy(_settings, proxyHandler);
 
 export { settings }
 export type { Settings }
