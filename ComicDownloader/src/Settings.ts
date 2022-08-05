@@ -46,7 +46,11 @@ await writeSettings();
 const proxyHandler: ProxyHandler<Record<string, unknown>> = {
     get: function (target, property)
     {
-        return new Proxy(Reflect.get(target, property), proxyHandler)
+        const value = Reflect.get(target, property);
+        if (value instanceof Object)
+            return new Proxy(value, proxyHandler);
+        else
+            return value;
     },
     set: function (target, property, value) {
         Reflect.set(target, property, value);
