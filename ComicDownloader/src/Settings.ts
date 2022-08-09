@@ -10,21 +10,17 @@ interface Settings {
     [k: string]: unknown;
 }
 
-let _fileHandle: fs.FileHandle;
 let _settings: Settings = {
     chapterThrottle: 10
 }
 
-const writeSettings = pDebounce(() => {
-    if (_fileHandle) {
-        return _fileHandle.writeFile(JSON.stringify(_settings, (k, v) => v, 4));
-    }
-}, 500);
+const settingsUrl = new URL("../settings.json", import.meta.url);
+
+const writeSettings = pDebounce(() => fs.writeFile(settingsUrl, JSON.stringify(_settings, (k, v) => v, 4)), 500);
 
 logger.log("Loading settings...");
 try {
-    _fileHandle = await fs.open(new URL("../settings.json", import.meta.url), "w+");
-    const content = (await _fileHandle.readFile()).toString();
+    const content = (await fs.readFile(settingsUrl)).toString();
     if (content.length !== 0) {
         let settingsFromFile = JSON.parse(content);
         _settings = {
@@ -34,7 +30,11 @@ try {
     }
 }
 catch (e: any) {
-    if (e instanceof SyntaxError) {
+    if (e.code === "ENOENT")
+    {
+        // Do nothing here
+    }
+    else if (e instanceof SyntaxError) {
         logger.warn("Invalid JSON, overwriting with default values");
     }
     else {
@@ -47,7 +47,7 @@ const proxyHandler: ProxyHandler<Record<string, unknown>> = {
     get: function (target, property)
     {
         const value = Reflect.get(target, property);
-        if (value instanceof Object)
+        if (target.hasOwnProperty(property) && value instanceof Object)
             return new Proxy(value, proxyHandler);
         else
             return value;
