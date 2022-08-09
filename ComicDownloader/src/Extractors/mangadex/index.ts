@@ -24,7 +24,7 @@ export default class mangadex extends Extractor
         if (info.result === "error") throw new Error("Something happened");
 
         const { volume, chapter, title } = info.data.attributes;
-        const finalTitle = `Vo.${volume} Ch.${chapter} ${title}`;
+        const finalTitle = (volume ? "Vo." + volume : "") + ` Ch.${chapter} ` + (title ?? "");
         
         const atHome = await this.got(`at-home/server/${uuid}`).json() as MD.AtHomeInfo;
         if (atHome.result === "error") throw new Error("Something happened");
@@ -38,11 +38,11 @@ export default class mangadex extends Extractor
     }
     async _getManga(uuid: string): Promise<MangaInfo>
     {
-        logger.log(`[mangadex] API call: manga/${uuid}`);
+        logger.log(`API call: manga/${uuid}`);
         const info = await this.got(`manga/${uuid}`).json() as MD.MangaInfo;
         if (info.result === "error") throw new Error("Something happened");
 
-        logger.log(`[mangadex] API call: manga/${uuid}/aggregate`);
+        logger.log(`API call: manga/${uuid}/aggregate`);
         const chapterList = await this.got(`manga/${uuid}/aggregate`, {
             searchParams: new URLSearchParams(mdSettings.languages.map(
                 elem => ["translatedLanguage[]", elem]
