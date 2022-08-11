@@ -1,0 +1,25 @@
+﻿<Window x:Class="Raw_Splitter___Merger.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Raw_Splitter___Merger"
+        xmlns:splitter="clr-namespace:Raw_Splitter___Merger.Splitter"
+        xmlns:merger="clr-namespace:Raw_Splitter___Merger.Merger"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800"
+        WindowState="Maximized">
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="Open Folder" Click="OpenFolder" />
+        </Menu>
+        <TabControl x:Name="WorkArea" Padding="10">
+            <TabItem Header="Splitter">
+                <splitter:SplitterUI />
+            </TabItem>
+            <TabItem Header="Merger">
+                <merger:MergerUI />
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</Window>

@@ -1,0 +1,39 @@
+﻿<UserControl x:Class="Raw_Splitter___Merger.Splitter.SplitterUI"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:component="clr-namespace:Raw_Splitter___Merger.Components"
+             xmlns:utility="clr-namespace:Raw_Splitter___Merger.Utility"
+             mc:Ignorable="d"
+             d:DesignHeight="450" d:DesignWidth="800"
+>
+    <UserControl.Resources>
+        <utility:IEnumerableJoinConverter x:Key="myConverter"/>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"/>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+        <DockPanel Grid.Column="0">
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
+                <Button Padding="10,5" HorizontalAlignment="Left" Click="StartProcessing">Start</Button>
+                <Button Padding="10,5" HorizontalAlignment="Left" Click="OpenWorkerWindow">Open Worker Window</Button>
+            </StackPanel>
+            <DataGrid x:Name="FileList" AutoGenerateColumns="False" IsReadOnly="True" SelectionChanged="OpenImage" HeadersVisibility="Column">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="File" Binding="{Binding File.Name}" Width="auto"/>
+                    <DataGridTextColumn Header="Split Position" Binding="{Binding SplitList, Converter={StaticResource myConverter}}" Width="*" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </DockPanel>
+        <component:ImageViewer Grid.Column="1" x:Name="Viewer" Click_GetCoords="AddSplitPosition"/>
+        <DockPanel Grid.Column="2" VerticalAlignment="Top">
+            <Label DockPanel.Dock="Top">Split Position</Label>
+            <Button DockPanel.Dock="Bottom" Click="RemoveSplitPosition">Remove</Button>
+            <ListBox x:Name="SplitList" Height="300" KeyDown="SplitList_KeyDown"></ListBox>
+        </DockPanel>
+    </Grid>
+</UserControl>
