@@ -19,8 +19,8 @@
         </Grid.ColumnDefinitions>
         <DockPanel Grid.Column="0">
             <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
-                <Button Padding="10,5" HorizontalAlignment="Left" Click="StartProcessing">Start</Button>
-                <Button Padding="10,5" HorizontalAlignment="Left" Click="OpenWorkerWindow">Open Worker Window</Button>
+                <Button Padding="10,5" Click="StartProcessing">Start</Button>
+                <Button Padding="10,5" Click="OpenWorkerWindow">Open Worker Window</Button>
             </StackPanel>
             <DataGrid x:Name="FileList" AutoGenerateColumns="False" IsReadOnly="True" SelectionChanged="OpenImage" HeadersVisibility="Column">
                 <DataGrid.Columns>
