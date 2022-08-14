@@ -1,22 +1,11 @@
 ﻿using System;
 using System.IO;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Ookii.Dialogs.Wpf;
+
 
 namespace Raw_Splitter___Merger.Splitter
 {
@@ -56,11 +45,11 @@ namespace Raw_Splitter___Merger.Splitter
         #endregion
 
         #region "Split Position"
-        private void AddSplitPosition(object sender, Point coord)
+        void AddSplitPosition(object sender, Point coord)
         {
             CurrentItem.SplitList.Add((int)coord.Y);
         }
-        private void RemoveSplitPosition(object sender, EventArgs e)
+        void RemoveSplitPosition(object sender, EventArgs e)
         {
             if (SplitList.SelectedIndex != -1)
             {
@@ -69,7 +58,7 @@ namespace Raw_Splitter___Merger.Splitter
                 SplitList.SelectedIndex = Math.Min(oldIndex, CurrentItem.SplitList.Count - 1);
             }
         }
-        private void SplitList_KeyDown(object sender, KeyEventArgs e)
+        void SplitList_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Delete)
                 RemoveSplitPosition(sender, e);
@@ -91,9 +80,9 @@ namespace Raw_Splitter___Merger.Splitter
                 {
                     foreach (var item in imageList)
                         worker.AddToQueue(item, new(dialog.SelectedPath));
+                    OpenWorkerWindow(sender, e);
                 }
             }
-            OpenWorkerWindow(sender, e);
         }
         #endregion
 
