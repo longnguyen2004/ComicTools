@@ -72,6 +72,7 @@ namespace Raw_Splitter___Merger.Splitter
         readonly CancellationTokenSource cancellation = new();
         readonly Task workerThrd;
         public bool IsRunning { get => workerThrd.Status == TaskStatus.Running; }
+        static readonly ImageOptimizer optimizer = new();
         void StartProcessQueue(CancellationToken token)
         {
             QueueItem item;
@@ -98,11 +99,13 @@ namespace Raw_Splitter___Merger.Splitter
                            .Append('-')
                            .AppendFormat($"{{0:D{padLength}}}", i)
                            .Append(".png");
+                    var fileName = Path.Combine(item.OutputDir.FullName, builder.ToString());
                     int start = coordList[i - 1], end = coordList[i];
                     using MagickImage cropped = new(image);
                     cropped.RePage();
                     cropped.Crop(new MagickGeometry(0, start, image.Width, end - start));
-                    cropped.Write(Path.Combine(item.OutputDir.FullName, builder.ToString()));
+                    cropped.Write(fileName);
+                    optimizer.Compress(fileName);
                     item.Progress = (double)end / image.Height;
                 }
                 CurrentItem = null;
@@ -121,6 +124,7 @@ namespace Raw_Splitter___Merger.Splitter
             return true;
         }
         #endregion
+
         public SplitterWorker()
         {
             CancellationToken token = cancellation.Token;

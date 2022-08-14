@@ -56,6 +56,7 @@ namespace Raw_Splitter___Merger.Merger
         readonly CancellationTokenSource cancellation = new();
         readonly Task workerThrd;
         public bool IsRunning { get => workerThrd.Status == TaskStatus.Running; }
+        static readonly ImageOptimizer optimizer = new();
         void StartProcessQueue(CancellationToken token)
         {
             QueueItem item;
@@ -72,6 +73,7 @@ namespace Raw_Splitter___Merger.Merger
                     collection.Add(new MagickImage(image));
                 using var result = collection.AppendVertically();
                 result.Write(item.OutputFile);
+                optimizer.Compress(item.OutputFile);
                 CurrentItem = null;
             }
         }
@@ -88,6 +90,7 @@ namespace Raw_Splitter___Merger.Merger
             return true;
         }
         #endregion
+
         public MergerWorker()
         {
             CancellationToken token = cancellation.Token;
