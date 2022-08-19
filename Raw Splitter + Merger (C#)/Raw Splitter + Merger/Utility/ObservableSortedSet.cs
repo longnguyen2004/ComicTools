@@ -50,7 +50,7 @@ namespace Raw_Splitter___Merger.Utility
             PropertyChanged?.Invoke(this, CountChangedEventArgs);
             PropertyChanged?.Invoke(this, MinChangedEventArgs);
             PropertyChanged?.Invoke(this, MaxChangedEventArgs);
-            CollectionChanged?.Invoke(this, new(NotifyCollectionChangedAction.Reset, Array.Empty<T>()));
+            CollectionChanged?.Invoke(this, new(NotifyCollectionChangedAction.Reset));
         }
 
         public ObservableSortedSet(): base()
