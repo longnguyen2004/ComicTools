@@ -12,7 +12,7 @@ namespace Raw_Splitter___Merger.Splitter
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public FileInfo File { get; private set; }
-        public ObservableSortedSet<int> SplitList { get; private set; }
+        public ObservableSortedSet<int> SplitList { get; set; }
         public ImageItem(FileInfo file)
         {
             File = file;

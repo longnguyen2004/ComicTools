@@ -21,6 +21,8 @@
             <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
                 <Button Padding="10,5" Click="StartProcessing">Start</Button>
                 <Button Padding="10,5" Click="OpenWorkerWindow">Open Worker Window</Button>
+                <Button Padding="10,5" Click="LoadSplitPosition">Load List</Button>
+                <Button Padding="10,5" Click="SaveSplitPosition">Save List</Button>
             </StackPanel>
             <DataGrid x:Name="FileList" AutoGenerateColumns="False" IsReadOnly="True" SelectionChanged="OpenImage" HeadersVisibility="Column">
                 <DataGrid.Columns>
