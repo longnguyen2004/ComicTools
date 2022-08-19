@@ -25,7 +25,7 @@ namespace Raw_Splitter___Merger.Components
         public event EventHandler<Point>? Click_GetCoords;
 
         private Point coords;
-        private BitmapImage _currentImage;
+        private BitmapImage? _currentImage;
         public static readonly DependencyProperty PathProperty = DependencyProperty.Register(
             "Path", typeof(string), typeof(ImageViewer)
         );
@@ -85,10 +85,7 @@ namespace Raw_Splitter___Merger.Components
         }
         private void _Image_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (Click_GetCoords is not null)
-            {
-                Click_GetCoords(this, coords);
-            }
+            Click_GetCoords?.Invoke(this, coords);
         }
     }
 }
