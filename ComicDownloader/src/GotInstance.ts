@@ -30,7 +30,8 @@ const got = gotScraping.extend({
     retry: {
         limit: 3
     },
-    context: context
+    context: context,
+    http2: false
 });
 
 export { got };
