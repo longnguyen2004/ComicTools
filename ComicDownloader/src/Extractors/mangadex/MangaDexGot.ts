@@ -1,6 +1,6 @@
 import { gotScraping } from "got-scraping";
 import { Mutex } from "async-mutex";
-import prompt from "prompt";
+import prompts from "prompts";
 import pThrottle from "p-throttle";
 
 import { Logger } from "../../Logger.js";
@@ -34,7 +34,18 @@ async function _getToken()
         if (!("username" in mdAuthSettings && "password" in mdAuthSettings))
         {
             logger.log("Please enter your username and password");
-            const { username, password } = await prompt.get(["username", "password"]);
+            const { username, password } = await prompts([
+                {
+                    type: "text",
+                    name: "username",
+                    message: "Username"
+                },
+                {
+                    type: "password",
+                    name: "password",
+                    message: "Password"
+                }
+            ]);
             mdAuthSettings.username = username as string;
             mdAuthSettings.password = password as string;
         }

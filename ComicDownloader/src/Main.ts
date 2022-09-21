@@ -1,23 +1,43 @@
-import prompt from "prompt";
+import prompts from "prompts";
 import { settings } from "./Settings.js";
 import { loadExtractors } from "./Extractor.js";
 import { Downloader } from "./Downloader.js";
 import { resolve } from "path";
 import { Logger } from "./Logger.js";
 
+type MainSettings = {
+    output?: string
+}
+
+const typedSettings = settings as MainSettings;
+
 await loadExtractors();
 
-prompt.start();
-
 const logger = new Logger("Main");
-logger.log("Current settings:", settings);
+logger.log("Current settings:", typedSettings);
 logger.log("Please input the link and output folder:");
-let {link, output} = <{link: string, output: string}>await prompt.get(["link", "output"]);
+let {link, output} = await prompts([
+    {
+        type: "text",
+        name: "link",
+        message: "Link"
+    },
+    {
+        type: "text",
+        name: "output",
+        message: "Output folder",
+        initial: typedSettings.output
+    }
+]);
 
-if (output === "")
+if (!output)
 {
     output = resolve("./output");
     logger.log(`Using default output folder: ${output}`);
+}
+else
+{
+    typedSettings.output = output;
 }
 
 await Downloader.download(link, output);
