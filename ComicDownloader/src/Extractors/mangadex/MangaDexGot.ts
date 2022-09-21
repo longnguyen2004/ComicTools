@@ -54,14 +54,11 @@ async function _getToken()
             return auth.token.session;
         }
         else {
-            const error = new Error();
-            error.name = auth.errors.id;
-            error.message = auth.errors.detail;
-            throw error;
+            throw new Error(auth.errors.detail);
         }
     }
-    const _refresh = (session: string, refresh: string) => {
-        return gotInternal.post("auth/refresh", {
+    const _refresh = async (session: string, refresh: string) => {
+        const res = await gotInternal.post("auth/refresh", {
             headers: {
                 "Authorization": "Bearer " + session
             },
@@ -69,19 +66,21 @@ async function _getToken()
                 token: refresh
             }
         }).json();
+        mdAuthSettings.token.lastRefreshTime = Date.now();
+        return res;
     }
 
     if ("token" in mdAuthSettings) {
         const { session, refresh, lastAuthTime, lastRefreshTime } = mdAuthSettings.token;
-        // Token no longer valid, can we refresh?
         const time = Date.now();
-        if (time > lastRefreshTime + sessionAge
-            && time < lastAuthTime + refreshAge) {
-            await _refresh(session, refresh);
-        }
-        // Can't refresh, redo authentication
-        else {
-            return _authenticate();
+        // Token no longer valid
+        if (time > lastRefreshTime + sessionAge)
+        {
+            // Do we need to reauth?
+            if (time > lastAuthTime + refreshAge)
+                return _authenticate();
+            else
+                await _refresh(session, refresh);
         }
         return session;
     }
